@@ -12,7 +12,7 @@ const SRG = SegmentedReassortmentGraphs
 include("const.jl")
 include("objects.jl")
 
-include("core_methods.jl")
+include("colors.jl")
 
 import Base: show
 include("show.jl")

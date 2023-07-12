@@ -14,12 +14,16 @@ using Test
     @test haskey(d, y)
 end
 
+# Testing hascolor, uncolor! and color!
 @testset "Color 1" begin
     K = 8
     x = SRG.TreeNode{K}()
+    SRG.check_node(x)
     @test SRG.hascolor(x, collect(1:K))
     for i in 1:K, j in (i+1):K
+        # x has all colors
         @test SRG.hascolor(x, i, j)
+        @test !SRG.isofcolor(x, [i, j])
 
         clr = let
             c = zeros(Bool, K)
@@ -27,11 +31,14 @@ end
             c[j] = true
             c
         end
+        # uncolor i and j
         SRG.uncolor!(x, clr)
-
         @test !SRG.hascolor(x, [i, j])
+        @test !SRG.isofcolor(x, [i, j])
         @test !SRG.hascolor(x, clr)
         @test SRG.hascolor(x, .!clr)
+        @test SRG.isofcolor(x, .!clr)
+        @test SRG.isofcolor(x, findall(.!clr))
 
         SRG.color!(x, i)
         @test SRG.hascolor(x, i) && !SRG.hascolor(x, j)
