@@ -1,121 +1,90 @@
 ####################################################################
-################################ Colors ############################
+############################## Type and constructors #########################
 ####################################################################
 
-"""
-    hascolor(x::Node, c)
-    hascolor(x::Branch, c)
+mutable struct Color{K}
+    color::MVector{K, Bool}
+end
 
-Determine whether `x` has all colors in `c`.
+Color(c::AbstractVector{Bool}) = Color{length(c)}(c)
 
-## Example
-```jldoctest
-julia> x = TreeNode([true, false, true]);
-
-julia> hascolor(x, 1, 3) # x has colors 1 and 3
-true
-
-julia> hascolor(x, 2) # but not 2
-false
-
-julia> hascolor(x, [1, 3])
-true
-
-julia> hascolor(x, [true, false, false]) # x has color 1
-true
-
-julia> hascolor(x, [true, true, true]) # but not 1, 2 and 3
-false
-```
-"""
-function hascolor(x::Element{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot access degree $K element $x at color $c"))
-        if !x.color[c]
-            return false
-        end
+function Color{K}(colors::AbstractVector{Int}) where K
+    c = zeros(MVector{K, Bool})
+    for i in colors
+        c[i] = true
     end
-    return true
+    return Color{K}(c)
 end
-hascolor(x, colors::AbstractVector{<:Integer}) = hascolor(x, colors...)
-hascolor(x, colors::AbstractVector{Bool}) = hascolor(x, findall(colors))
+Color(colors::AbstractVector{Int}, K) = Color{K}(colors)
 
-"""
-    isofcolor(x, colors)
+Color{K}(colors::Vararg{<:Integer}) where K = Color{K}(collect(Int, colors))
 
-Check whether `x` is exactly of a given color.
+####################################################################
+############################## Base functions #########################
+####################################################################
 
-```jldoctest
-julia> x = TreeNode([true, false, true]);
+Base.:(==)(x::Color{K}, y::Color{K}) where K = all(z -> z[1]==z[2], zip(x.color, y.color))
+Base.:(==)(::Color, ::Color) = false
+Base.hash(x::Color, h::UInt64) = hash(x.color, h)
 
-julia> SRG.isofcolor(x, [true, false, true])
-true
+Base.getindex(x::Color, val, i...) = getindex(x.color, val, i...)
+Base.setindex!(x::Color, val, i...) = setindex!(x.color, val, i...)
 
+Base.iterate(x::Color) = iterate(x.color)
+Base.iterate(x::Color, state) = iterate(x.color, state)
+Base.length(::Color{K}) where K = K
+Base.eltype(::Color) = Bool
 
-julia> SRG.isofcolor(x, [true, false, false])
-false
+colors(x::Color{K}) where K = Iterators.filter(i -> x[i], 1:K)
 
-julia> SRG.hascolor(x, [true, false, false])
-true
+Base.copy(x::Color) = Color(copy(x.color))
 
-julia>SRG.isofcolor(x, [1, 3])
-true
-"""
-isofcolor(x::Element, colors::AbstractVector{Bool}) = (x.color == colors)
-function isofcolor(x::Element{K}, colors::AbstractVector{Int}) where K
-    return x.color == index_to_onehot(colors, K)
-end
+####################################################################
+############################## Set-like functions #########################
+####################################################################
 
-"""
-    color!(x::Node, color)
-    color!(x::Node, colors...)
-    color!(x::Branch, color)
-
-Color `x` appropriately. The second argument can be an index, an array or a vararg.
-See `?SRG.hascolor` for examples (same syntax).
-"""
-function color!(x::Node{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot color degree $K `Node` with $c"))
-        @debug x.color[c] && @warn "Node $x already had color $c"
-        x.color[c] = true
+Base.:(!)(x::Color) = Color(.!(x.color))
+function Base.union(x::Color{K}, y::Color{K}) where K
+    z = Color(zeros(Bool, K))
+    for (i, (c1, c2)) in enumerate(zip(x, y))
+        z[i] = c1 || c2
     end
+    return z
 end
-function color!(x::Branch{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot color degree $K `Branch` with $c"))
-        @debug x.color[c] && @warn "Branch $x already had color $c"
-        x.color[c] = true
+
+function Base.intersect(x::Color{K}, y::Color{K}) where K
+    z = Color(zeros(Bool, K))
+    for (i, (c1, c2)) in enumerate(zip(x, y))
+        z[i] = c1 && c2
     end
+    return z
 end
-color!(x, colors::AbstractVector{<:Integer}) = color!(x, colors...)
-color!(x, colors::AbstractVector{Bool}) = color!(x, findall(colors))
 
 """
-    uncolor!(x::Node, AbstractVector{Bool})
-    uncolor!(x::Node, colors::Vararg{Int})
-    uncolor!(x::Branch, colors)
+    issubset(x::Color, y::Color)
 
-Uncolor `x` appropriately. The second argument can be:
-- a `Vector{Bool}` or equivalent, representing a specific color to undo
-- any number of `Int` or a `Vector{Int}`, representing indices of colors to undo
-
-See `?SRG.hascolor` for examples (same syntax).
+Is every color in `x` also in `y`.
 """
-function uncolor!(x::Node{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot uncolor degree $K `Node` at $c"))
-        x.color[c] = false
+Base.issubset(x::Color{K}, y::Color{K}) where K = all(i -> y[i], colors(x))
+
+
+"""
+    Base.setdiff(x::Color, y::Color)
+
+Return a `Color` with all colors in `x` and not in `y`.
+"""
+function Base.setdiff(x::Color{K}, y::Color{K}) where K
+    z = copy(x)
+    for i in colors(y)
+        z[i] = false
     end
+    return z
 end
-function uncolor!(x::Branch{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot uncolor degree $K `Branch` at $c"))
-        x.color[c] = false
-    end
-end
-uncolor!(x, colors::AbstractVector{<:Integer}) = uncolor!(x, colors...)
-uncolor!(x, color::AbstractVector{Bool}) = uncolor!(x, findall(color))
+
+
+####################################################################
+############################## Other #########################
+####################################################################
 
 
 """
