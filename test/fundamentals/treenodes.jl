@@ -21,16 +21,20 @@ end
     SRG.check_node(x)
     @test SRG.hascolor(x, collect(1:K))
     for i in 1:K, j in (i+1):K
-        # x has all colors
-        @test SRG.hascolor(x, i, j)
-        @test !SRG.isofcolor(x, [i, j])
-
         clr = let
             c = zeros(Bool, K)
             c[i] = true
             c[j] = true
             c
         end
+
+        # x has all colors
+        @test SRG.hascolor(x, Color{K}(i, j))
+        @test SRG.hascolor(x, i, j)
+        @test SRG.hascolor(x, [i, j])
+        @test SRG.hascolor(x, clr)
+        @test !SRG.isofcolor(x, [i, j])
+
         # uncolor i and j
         SRG.uncolor!(x, clr)
         @test !SRG.hascolor(x, [i, j])

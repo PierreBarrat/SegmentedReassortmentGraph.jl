@@ -9,6 +9,9 @@ end
 Color(c::AbstractVector{Bool}) = Color{length(c)}(c)
 
 function Color{K}(colors::AbstractVector{Int}) where K
+    if length(colors) > K
+        throw(DimensionMismatch("Cannot construct `Color{$K}` object from $(length(colors)) colors"))
+    end
     c = zeros(MVector{K, Bool})
     for i in colors
         c[i] = true
@@ -16,7 +19,6 @@ function Color{K}(colors::AbstractVector{Int}) where K
     return Color{K}(c)
 end
 Color(colors::AbstractVector{Int}, K) = Color{K}(colors)
-
 Color{K}(colors::Vararg{<:Integer}) where K = Color{K}(collect(Int, colors))
 
 ####################################################################
@@ -38,6 +40,8 @@ Base.eltype(::Color) = Bool
 colors(x::Color{K}) where K = Iterators.filter(i -> x[i], 1:K)
 
 Base.copy(x::Color) = Color(copy(x.color))
+
+
 
 ####################################################################
 ############################## Set-like functions #########################
@@ -81,9 +85,14 @@ function Base.setdiff(x::Color{K}, y::Color{K}) where K
     return z
 end
 
-
 ####################################################################
 ############################## Other #########################
+####################################################################
+
+function color!(color::Color{K}, i::Int)
+
+####################################################################
+############################## Useless? #########################
 ####################################################################
 
 
