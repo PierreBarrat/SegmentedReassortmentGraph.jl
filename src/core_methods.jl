@@ -67,22 +67,12 @@ isofcolor(x::Element{K}, color::Vararg{<:Integer}) where K = isofcolor(x, Color{
 Color `x` appropriately. The second argument can be an index, an array or a vararg.
 See `?SRG.hascolor` for examples (same syntax).
 """
-function color!(x::Node{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot color degree $K `Node` with $c"))
-        @debug x.color[c] && @warn "Node $x already had color $c"
-        x.color[c] = true
-    end
+function color!(x::Element{K}, color::Color{K}) where K
+    @debug hascolor(x, color) && @warn "$x already has color $color"
+    return union!(x.color, color)
 end
-function color!(x::Branch{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot color degree $K `Branch` with $c"))
-        @debug x.color[c] && @warn "Branch $x already had color $c"
-        x.color[c] = true
-    end
-end
-color!(x, colors::AbstractVector{<:Integer}) = color!(x, colors...)
-color!(x, colors::AbstractVector{Bool}) = color!(x, findall(colors))
+color!(x::Element{K}, color::AbstractVector) where K = color!(x, Color{K}(color))
+color!(x::Element{K}, color::Vararg{<:Integer}) where K = color!(x, Color{K}(color...))
 
 """
     uncolor!(x::Node, AbstractVector{Bool})
@@ -95,17 +85,9 @@ Uncolor `x` appropriately. The second argument can be:
 
 See `?SRG.hascolor` for examples (same syntax).
 """
-function uncolor!(x::Node{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot uncolor degree $K `Node` at $c"))
-        x.color[c] = false
-    end
+function uncolor!(x::Node{K}, color::Color{K}) where K
+    @debug !hascolor(x, color) && @warn "$x does not have color $color"
+    return setdiff!(x.color, color)
 end
-function uncolor!(x::Branch{K}, colors::Vararg{<:Integer}) where K
-    for c in colors
-        !(0 < c <= K) && throw(DimensionMismatch("Cannot uncolor degree $K `Branch` at $c"))
-        x.color[c] = false
-    end
-end
-uncolor!(x, colors::AbstractVector{<:Integer}) = uncolor!(x, colors...)
-uncolor!(x, color::AbstractVector{Bool}) = uncolor!(x, findall(color))
+uncolor!(x::Element{K}, color::AbstractVector) where K = uncolor!(x, Color{K}(color))
+uncolor!(x::Element{K}, color::Vararg{<:Integer}) where K = uncolor!(x, Color{K}(color...))

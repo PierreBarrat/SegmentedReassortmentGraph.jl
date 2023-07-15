@@ -55,6 +55,12 @@ function Base.union(x::Color{K}, y::Color{K}) where K
     end
     return z
 end
+function Base.union!(x::Color{K}, y::Color{K}) where K
+    for (i, (c1, c2)) in enumerate(zip(x, y))
+        x[i] = c1 || c2
+    end
+    return x
+end
 
 function Base.intersect(x::Color{K}, y::Color{K}) where K
     z = Color(zeros(Bool, K))
@@ -84,12 +90,16 @@ function Base.setdiff(x::Color{K}, y::Color{K}) where K
     end
     return z
 end
+function Base.setdiff!(x::Color{K}, y::Color{K}) where K
+    for i in colors(y)
+        x[i] = false
+    end
+    return x
+end
 
 ####################################################################
 ############################## Other #########################
 ####################################################################
-
-function color!(color::Color{K}, i::Int)
 
 ####################################################################
 ############################## Useless? #########################

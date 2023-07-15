@@ -29,7 +29,7 @@ end
         end
 
         # x has all colors
-        @test SRG.hascolor(x, Color{K}(i, j))
+        @test SRG.hascolor(x, SRG.Color{K}(i, j))
         @test SRG.hascolor(x, i, j)
         @test SRG.hascolor(x, [i, j])
         @test SRG.hascolor(x, clr)

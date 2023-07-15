@@ -20,13 +20,37 @@ using Test
     @test !(SRG.Color{1}(1) == SRG.Color{2}(1))
 end
 
-@testset "Union & Intersect" begin
+@testset "Union" begin
     K = 4
     @test union(SRG.Color{K}(1,2), SRG.Color{K}(3,4)) == SRG.Color{K}(1,2,3,4)
     @test union(SRG.Color{K}(1,2), SRG.Color{K}(1,2,3)) == SRG.Color{K}(1,2,3)
     @test union(SRG.Color{K}(), SRG.Color{K}()) == SRG.Color{K}()
     @test union(SRG.Color{K}(), SRG.Color{K}(1,2,3)) == SRG.Color{K}(1,2,3)
 
+    @test let
+        c = SRG.Color{K}(1,2)
+        union!(c, SRG.Color{K}(3,4))
+        c == SRG.Color{K}(1,2,3,4)
+    end
+    @test let
+        c = SRG.Color{K}(1,2)
+        union!(c, SRG.Color{K}(1,2,3))
+        c == SRG.Color{K}(1,2,3)
+    end
+    @test let
+        c = SRG.Color{K}()
+        union!(c, SRG.Color{K}())
+        c == SRG.Color{K}()
+    end
+    @test let
+        c = SRG.Color{K}()
+        union!(c, SRG.Color{K}(1,2,3))
+        c == SRG.Color{K}(1,2,3)
+    end
+end
+
+@testset "Intersect" begin
+    K = 4
     @test intersect(SRG.Color{K}(1,2), SRG.Color{K}(3,4)) == SRG.Color{K}()
     @test intersect(SRG.Color{K}(1,2), SRG.Color{K}(1,2,3)) == SRG.Color{K}(1,2)
     @test intersect(SRG.Color{K}(), SRG.Color{K}()) == SRG.Color{K}()
@@ -49,6 +73,32 @@ end
     @test setdiff(SRG.Color{K}(), SRG.Color{K}()) == SRG.Color{K}()
     @test setdiff(SRG.Color{K}(1,2,3), SRG.Color{K}()) == SRG.Color{K}(1,2,3)
     @test setdiff(SRG.Color{K}(1,2), SRG.Color{K}(2,3)) == SRG.Color{K}(1)
+
+    @test let
+        c = SRG.Color{K}(1,2)
+        setdiff!(c, SRG.Color{K}(3,4))
+        c ==  SRG.Color{K}(1,2)
+    end
+    @test let
+        c = SRG.Color{K}(1,2)
+        setdiff!(c, SRG.Color{K}(1,2,3))
+        c ==  SRG.Color{K}()
+    end
+    @test let
+        c = SRG.Color{K}()
+        setdiff!(c, SRG.Color{K}())
+        c ==  SRG.Color{K}()
+    end
+    @test let
+        c = SRG.Color{K}(1,2,3)
+        setdiff!(c, SRG.Color{K}())
+        c ==  SRG.Color{K}(1,2,3)
+    end
+    @test let
+        c = SRG.Color{K}(1,2)
+        setdiff!(c, SRG.Color{K}(2,3))
+        c ==  SRG.Color{K}(1)
+    end
 end
 
 @testset "onehot_to_index" begin
