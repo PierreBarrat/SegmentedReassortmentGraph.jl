@@ -18,6 +18,8 @@ function Color{K}(colors::AbstractVector{Int}) where K
     end
     return Color{K}(c)
 end
+Color(c::Color) = c
+Color{K}(c::Color{K}) where K = c
 Color(colors::AbstractVector{Int}, K) = Color{K}(colors)
 Color{K}(colors::Vararg{<:Integer}) where K = Color{K}(collect(Int, colors))
 

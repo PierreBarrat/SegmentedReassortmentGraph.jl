@@ -1,3 +1,31 @@
+"""
+    hasancestor(child, parent)
+    hasancestor(child, parent, color)
+
+Does `child` has `parent` as an ancestor?
+"""
+hasancestor(child::TreeNode{K}, parent::Node{K}) where K = (ancestor(child) == parent)
+function hasancestor(child::TreeNode{K}, parent::Node{K}, color) where K
+    return ancestor(child, Color{K}(color)) == parent
+end
+function hasancestor(child, parent::Node{K}, color...) where K
+    hasancestor(child, parent, Color{K}(color...))
+end
+
+"""
+    haschild(parent, child)
+"""
+haschild(parent::TreeNode{K}, child::Node{K}) where K = in(child, children(parent))
+
+
+function find_ancestor(child::TreeNode{K}, parent::Node{K}) where K
+    hasancetor(child, parent) ? (nothing, child.up_branch) : (nothing, nothing)
+end
+
+
+
+
+
 ####################################################################
 ################################ Colors ############################
 ####################################################################
@@ -60,9 +88,7 @@ isofcolor(x::Element{K}, color::Vararg{<:Integer}) where K = isofcolor(x, Color{
 
 
 """
-    color!(x::Node, color)
-    color!(x::Node, colors...)
-    color!(x::Branch, color)
+    color!(x::Element, color)
 
 Color `x` appropriately. The second argument can be an index, an array or a vararg.
 See `?SRG.hascolor` for examples (same syntax).
@@ -75,17 +101,16 @@ color!(x::Element{K}, color::AbstractVector) where K = color!(x, Color{K}(color)
 color!(x::Element{K}, color::Vararg{<:Integer}) where K = color!(x, Color{K}(color...))
 
 """
-    uncolor!(x::Node, AbstractVector{Bool})
-    uncolor!(x::Node, colors::Vararg{Int})
-    uncolor!(x::Branch, colors)
+    uncolor!(x::Element, color)
 
 Uncolor `x` appropriately. The second argument can be:
+- a `Color`
 - a `Vector{Bool}` or equivalent, representing a specific color to undo
 - any number of `Int` or a `Vector{Int}`, representing indices of colors to undo
 
 See `?SRG.hascolor` for examples (same syntax).
 """
-function uncolor!(x::Node{K}, color::Color{K}) where K
+function uncolor!(x::Element{K}, color::Color{K}) where K
     @debug !hascolor(x, color) && @warn "$x does not have color $color"
     return setdiff!(x.color, color)
 end

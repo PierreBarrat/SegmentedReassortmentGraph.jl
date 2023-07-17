@@ -14,6 +14,27 @@ using Test
     @test haskey(d, y)
 end
 
+@testset "hasancestor / haschild" begin
+    K = 3
+    clr = SRG.Color{K}(1, 2)
+    p = SRG.TreeNode{K}(; color = clr)
+    c = SRG.TreeNode{K}(; color = clr)
+    b = SRG.Branch{K}(p, c, clr, missing)
+
+    SRG._add_ancestor!(c, b)
+    SRG._add_child!(p, b)
+
+    @test SRG.hasancestor(c, p)
+    @test SRG.hasancestor(c, p, 1)
+    @test SRG.hasancestor(c, p, 1, 2)
+    @test !SRG.hasancestor(p, c)
+    @test !SRG.hasancestor(p, c, 1, 2)
+    @test_throws Exception SRG.hasancestor(c, p, 1, 3)
+
+    @test SRG.haschild(p, c)
+    @test !SRG.haschild(c, p)
+end
+
 # Testing hascolor, uncolor! and color!
 @testset "Color 1" begin
     K = 8

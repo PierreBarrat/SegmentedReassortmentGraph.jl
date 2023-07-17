@@ -17,6 +17,8 @@ include("elements.jl")
 
 include("core_methods.jl")
 
+include("construction.jl")
+
 import Base: show
 include("show.jl")
 

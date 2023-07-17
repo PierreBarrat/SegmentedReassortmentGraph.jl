@@ -66,14 +66,19 @@ function TreeNode{K}(;
     branch_length = missing,
 ) where K
     node = TreeNode{K}(id, label, nothing, [], color)
-    node.up_branch = Branch(GlobalRoot{K}(), node, color, branch_length)
+    node.up_branch = nothing
     return node
 end
 
 Base.:(==)(x::TreeNode{K}, y::TreeNode{K}) where K = (x.id == y.id)
 Base.hash(x::TreeNode, h::UInt64) = hash(x.id, h)
 
-ancestor(x::TreeNode) = x.up_branch.parent
+ancestor(x::TreeNode) = isnothing(x.up_branch) ? nothing : x.up_branch.parent
+function ancestor(x::TreeNode, color)
+    @assert hascolor(x, color) "ColorError" x color
+    ancestor(x)
+end
+
 children(x::TreeNode) = Iterators.map(b -> b.child, x.down_branches)
 child(x::TreeNode, i) = x.down_branches[i].child
 
