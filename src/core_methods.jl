@@ -1,31 +1,3 @@
-"""
-    hasancestor(child, parent)
-    hasancestor(child, parent, color)
-
-Does `child` has `parent` as an ancestor?
-"""
-hasancestor(child::TreeNode{K}, parent::Node{K}) where K = (ancestor(child) == parent)
-function hasancestor(child::TreeNode{K}, parent::Node{K}, color) where K
-    return ancestor(child, Color{K}(color)) == parent
-end
-function hasancestor(child, parent::Node{K}, color...) where K
-    hasancestor(child, parent, Color{K}(color...))
-end
-
-"""
-    haschild(parent, child)
-"""
-haschild(parent::TreeNode{K}, child::Node{K}) where K = in(child, children(parent))
-
-
-function find_ancestor(child::TreeNode{K}, parent::Node{K}) where K
-    hasancetor(child, parent) ? (nothing, child.up_branch) : (nothing, nothing)
-end
-
-
-
-
-
 ####################################################################
 ################################ Colors ############################
 ####################################################################

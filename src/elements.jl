@@ -34,6 +34,37 @@ end
 
 
 """
+    ancestor(x::TreeNode)
+
+Return the (unique) ancestor of `x` and the branch color, as a tuple
+If `x` is a root (*i.e.* no ancestor) return `nothing` instead of the ancestor.
+"""
+function ancestor end
+
+"""
+    find_ancestor(child::Node{K}, parent::Node{K})
+
+Return the branch above `child` leading to `parent`, and an index if relevant.
+Output format: `(idx, branch)` where both `idx` and `branch` can be `nothing`.
+"""
+function find_ancestor end
+
+"""
+    isroot(x::Node[, color])
+
+If the branch up from x does not have all colors of x, then x is a root.
+"""
+function isroot end
+
+"""
+    hasancestor(child, parent)
+    hasancestor(child, parent, color)
+
+Does `child` has `parent` as an ancestor?
+"""
+function hasancestor end
+
+"""
     _add_ancestor!(child::Element, branch)
     _add_child!(parent::Element, branch)
     _remove_ancestor!(child::Element, branch)
@@ -89,10 +120,49 @@ end
 Base.:(==)(x::TreeNode{K}, y::TreeNode{K}) where K = (x.id == y.id)
 Base.hash(x::TreeNode, h::UInt64) = hash(x.id, h)
 
-ancestor(x::TreeNode) = isnothing(x.up_branch) ? nothing : x.up_branch.parent
+
+function ancestor(x::TreeNode)
+    return if isnothing(x.up_branch)
+        (nothing, x.color)
+    else
+        (x.up_branch.parent, x.up_branch.color)
+    end
+end
+"""
+    ancestor(x::TreeNode, color)
+
+Always return an unambiguous ancestor, otherwise throws an error:
+- return `nothing` if `x` is the root for `color`
+- return `ancestor(x)` if the branch above `x` has color `color`.
+- throws an error if the branch above `x` has some but not all of the colors in `color`, since
+  in this case, both `nothing` and `ancestor(x)` could arguably be returned.
+"""
 function ancestor(x::TreeNode, color)
+    return if !hascolor(x, color)
+        throw(ColorError("Node $x (clr $(x.color)) does not have color $color"))
+    elseif isnothing(x.up_branch) || isdisjoint(x.up_branch.color, color)
+        nothing
+    elseif hascolor(x.up_branch, color)
+        ancestor(x)[1]
+    else
+        throw(ErrorException("""
+            $x has no well defined ancestor for color $color.
+            Node color $(x.color) - color of up branch $(x.up_branch.color)
+        """))
+    end
+end
+ancestor(x::TreeNode{K}, color::Vararg{<:Integer}) where K = ancestor(x, Color{K}(color...))
+ancestors(x::TreeNode, color) = (ancestor(x, color), )
+ancestors(x::TreeNode) = (ancestor(x),)
+
+branch_length(x::TreeNode) = x.up_branch.len
+function branch_length(x::TreeNode, color)
     @assert hascolor(x, color) "ColorError" x color
-    ancestor(x)
+    return branch_length(x)
+end
+function branch_length(x::TreeNode, color::Vararg{<:Integer})
+    @assert hascolor(x, color...) "ColorError" x color
+    return branch_length(x)
 end
 
 children(x::TreeNode) = Iterators.map(b -> b.child, x.down_branches)
@@ -100,16 +170,27 @@ child(x::TreeNode, i) = x.down_branches[i].child
 
 isleaf(x::TreeNode) = isempty(x.down_branches)
 issingleton(x::TreeNode) = (length(x.down_branches) == 1)
-isroot(::TreeNode) = false
+
+
+isroot(x::TreeNode) = isnothing(x.up_branch) || !hascolor(x.up_branch, x.color)
+function isroot(x::TreeNode, color)
+    return if !hascolor(x, color)
+        false
+    else
+        isnothing(x.up_branch) || !hascolor(x.up_branch, color)
+    end
+end
+isroot(x::TreeNode{K}, color::Vararg{<:Integer}) where K = isroot(x, Color{K}(color...))
+
 
 
 function check_node(x::TreeNode{K}) where K
     try
-        @assert ancestor(x) != x "Node $x is its own ancestor"
+        @assert ancestor(x)[1] != x "Node is its own ancestor"
         # x must have at least one color
         @assert sum(x.color) > 0 "Node must have at least one color"
         # tree node: all colors must go up
-        @assert isofcolor(x, x.up_branch.color) "Mismatched colors with up branch"
+        @assert isnothing(x.up_branch) || hascolor(x, x.up_branch.color) "Mismatched colors with up branch"
         # Colors of branch going down must be included in x
         for (i, b) in enumerate(x.down_branches)
             @assert hascolor(x, b.color) "Mismatched color with down branch $i"
@@ -123,6 +204,25 @@ function check_node(x::TreeNode{K}) where K
     end
     return true
 end
+
+hasancestor(child::TreeNode{K}, parent::Node{K}) where K = (ancestor(child)[1] == parent)
+function hasancestor(child::TreeNode{K}, parent::Node{K}, color) where K
+    return ancestor(child, Color{K}(color)) == parent
+end
+function hasancestor(child, parent::Node{K}, color...) where K
+    hasancestor(child, parent, Color{K}(color...))
+end
+
+"""
+    haschild(parent, child)
+"""
+haschild(parent::TreeNode{K}, child::Node{K}) where K = in(child, children(parent))
+
+
+function find_ancestor(child::TreeNode{K}, parent::Node{K}) where K
+    hasancestor(child, parent) ? (nothing, child.up_branch) : (nothing, nothing)
+end
+
 
 function _add_ancestor!(child::TreeNode, branch)
     isnothing(child.up_branch) || throw(ErrorException("Node $child already has an ancestor"))

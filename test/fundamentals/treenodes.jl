@@ -18,7 +18,7 @@ end
     K = 3
     clr = SRG.Color{K}(1, 2)
     p = SRG.TreeNode{K}(; color = clr)
-    c = SRG.TreeNode{K}(; color = clr)
+    c = SRG.TreeNode{K}()
     b = SRG.Branch{K}(p, c, clr, missing)
 
     SRG._add_ancestor!(c, b)
@@ -80,6 +80,70 @@ end
 
 
 
+@testset "link / unlink - 1" begin
+    K = 3
+    a = SRG.TreeNode{K}()
+    c = SRG.TreeNode{K}()
+    clr = SRG.Color{K}(1,2,3)
+    SRG.link!(a, c, clr, 1)
+    @test SRG.ancestor(c) == (a, clr)
+    @test SRG.ancestor(c, 1, 2) == a
+    @test SRG.branch_length(c) == 1
+    @test SRG.branch_length(c, 1, 2) == 1
+    @test SRG.find_ancestor(c, a) == (nothing, c.up_branch)
+    @test SRG.haschild(a, c)
+    @test SRG.isroot(a)
+    @test !SRG.isroot(c)
 
+    a2 = SRG.TreeNode{K}()
+    @test_throws ErrorException SRG.link!(a2, c, SRG.Color{K}(1,2,3), 1)
+    @test_throws ErrorException SRG.link!(a2, c, SRG.Color{K}(), 1)
+    @test_throws ErrorException SRG.link!(a2, a2, SRG.Color{K}(1,2,3), 1)
 
+    ulnk_clr = SRG.Color{K}(1, 2)
+    new_clr = setdiff(clr, ulnk_clr)
+    SRG.unlink!(a, c, ulnk_clr)
+    @test_throws Exception SRG.unlink!(a, c, SRG.Color{K}(1, 2))
+    @test SRG.ancestor(c) == (a, new_clr)
+    @test isnothing(SRG.ancestor(c, 1, 2))
+    @test_throws ErrorException SRG.ancestor(c, 1, 3)
+    @test SRG.ancestor(c, 3) == a
+    @test SRG.isroot(c)
+    @test SRG.isroot(c, 1, 2)
+    @test !SRG.isroot(c, 3)
+    @test SRG.haschild(a, c)
+end
+
+@testset "link / unlink - 2" begin
+    K = 5
+    a = SRG.TreeNode{K}()
+    c = SRG.TreeNode{K}(; color=SRG.Color{K}(1,2,3,4))
+    @test_throws SRG.ColorError SRG.link!(a, c, SRG.Color{K}(1,2,3,4,5), 1)
+    clr = SRG.Color{K}(1,2)
+    SRG.link!(a, c, clr, 1)
+
+    @test SRG.ancestor(c) == (a, clr)
+    @test SRG.ancestor(c, 1, 2) == a
+    @test SRG.ancestor(c, 1) == a
+    @test_throws ErrorException SRG.ancestor(c, 1, 2, 3)
+    @test SRG.isroot(c)
+    @test SRG.isroot(c, 3)
+    @test !SRG.isroot(c, 1, 2)
+
+    @test SRG.branch_length(c) == 1
+    @test SRG.branch_length(c, 1) == 1
+    @test SRG.find_ancestor(c, a) == (nothing, c.up_branch)
+    @test SRG.haschild(a, c)
+
+    a2 = SRG.TreeNode{K}(; color = SRG.Color{K}(3))
+    @test_throws SRG.ColorError SRG.link!(a2, c, SRG.Color{K}(4), missing) # a2 has wrong colors
+    @test_throws ErrorException SRG.link!(a2, c, SRG.Color{K}(3), missing) # c already has an ancestor
+
+    SRG.unlink!(a, c)
+    @test SRG.isroot(c, 1, 2)
+    @test !SRG.haschild(a, c)
+    @test !SRG.hasancestor(c, a)
+    @test_throws SRG.ColorError SRG.link!(a2, c, SRG.Color{K}(1, 2), missing)
+    SRG.link!(a2, c, SRG.Color{K}(3), missing)
+end
 
