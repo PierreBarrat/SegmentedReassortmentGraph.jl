@@ -72,6 +72,15 @@ function Base.intersect(x::Color{K}, y::Color{K}) where K
     return z
 end
 
+function Base.isdisjoint(x::Color{K}, y::Color{K}) where K
+    for (c1, c2) in zip(x, y)
+        if c1 && c2
+            return false
+        end
+    end
+    return true
+end
+
 """
     issubset(x::Color, y::Color)
 

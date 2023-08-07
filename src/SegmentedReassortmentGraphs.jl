@@ -2,7 +2,7 @@ module SegmentedReassortmentGraphs
 
 import Base: ==, copy, hash, iterate, eltype, length
 # functions for Color
-import Base: !, getindex, setindex!, intersect, issubset, setdiff, setdiff!, union, union!
+import Base: !, getindex, setindex!, intersect, isdisjoint, issubset, setdiff, setdiff!, union, union!
 
 using Random
 using StaticArrays
