@@ -2,9 +2,6 @@ abstract type Element{K} end
 
 abstract type Node{K} <: Element{K} end
 
-struct GlobalRoot{K} <: Node{K}
-end
-
 ####################################################################
 ############################### Branch{K} ##########################
 ####################################################################
@@ -76,6 +73,24 @@ function _add_ancestor! end
 function _add_child! end
 function _remove_ancestor! end
 function _remove_child! end
+
+#=
+To implement
+- ancestor(node[, color])
+- child(node)
+- hasancestor(child::SpecElement, parent::Element)
+- haschile(child::SpecElement, parent::Element)
+- find_ancestor(child::SpecElement, parent::Element) --> (idx, branch_to_ancestor)
+- _add_ancestor!(node::SpecElement, branch)
+- _add_child!(node::, branch)
+- _remove_ancestor!(node::, branch)
+- _remove_child!(node::, branch)
+- isleaf
+- issingleton
+- isroot
+- isroot(node, color)
+- branch_length
+=#
 ####################################################################
 ############################## TreeNode{K} #########################
 ####################################################################
@@ -243,3 +258,18 @@ function _remove_child!(parent::TreeNode, branch)
     deleteat!(parent.down_branches, i)
 end
 
+
+####################################################################
+############################## HybridNode{K} #########################
+####################################################################
+# mutable struct HydridNode{K} <: Node{K}
+#     id::String
+#     label::String
+#     up_branches::Vector{Branch{K}}
+#     down_branch::Union{Nothing, Branch{K}}
+#     color::Color{K}
+
+#     function HybridNode{K}(id, label, up_branches, down_branch, color::Color{K}) where K
+#         return new(id, label, up_branches, down_branch, color)
+#     end
+# end

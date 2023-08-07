@@ -50,4 +50,3 @@ function unlink!(parent, child)
     return nothing
 end
 
-# function prune!(node::TreeNode{K}, )
