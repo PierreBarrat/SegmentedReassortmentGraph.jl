@@ -28,7 +28,18 @@ function Branch(parent, child, color::AbstractVector, len)
 end
 
 
+"""
+    _add_ancestor!(child::Element, branch)
+    _add_child!(parent::Element, branch)
+    _remove_ancestor!(child::Element, branch)
+    _remove_child!(parent::Element, branch)
 
+Not to use directly. Add a branch down/up an element. Perform basic checks.
+"""
+function _add_ancestor! end
+function _add_child! end
+function _remove_ancestor! end
+function _remove_child! end
 ####################################################################
 ############################## TreeNode{K} #########################
 ####################################################################
@@ -108,4 +119,22 @@ function check_node(x::TreeNode{K}) where K
     return true
 end
 
+function _add_ancestor!(child::TreeNode, branch)
+    isnothing(child.up_branch) || throw(ErrorException("Node $child already has an ancestor"))
+    hascolor(child, branch.color) || throw(ColorError("Incompatible colors - $child $branch"))
+    child.up_branch = branch
+end
+function _add_child!(parent::TreeNode, branch)
+    hascolor(parent, branch.color) || throw(ColorError("Incompatible colors - $parent $branch"))
+    push!(parent.down_branches, branch)
+end
+function _remove_ancestor!(child::TreeNode, branch)
+    child.up_branch == branch || throw(ErrorException("Branch $branch is not ancestor of $child"))
+    child.up_branch = nothing
+end
+function _remove_child!(parent::TreeNode, branch)
+    i = findfirst(==(branch), parent.down_branches)
+    !isnothing(i) || throw(ErrorException("Branch $branch is not a child of $parent"))
+    deleteat!(parent.down_branches, i)
+end
 
