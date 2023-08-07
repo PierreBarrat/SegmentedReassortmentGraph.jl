@@ -1,8 +1,7 @@
-
 """
     link!(parent, child, color[, length=missing])
 
-Link `ancestor` to `child` by creating a branch if necessary.
+Link `ancestor` to `child` with a branch of `color`, by creating a branch if necessary.
 """
 function link!(
     parent::Node{K},
@@ -10,8 +9,11 @@ function link!(
     color::Color{K},
     length = missing,
 ) where K
-    @assert hascolor(parent, colors) "Cannot link node $(ancestors) with color $(ancestors.color) to a branch of color $colors"
-    @assert hascolor(child, colors) "Cannot link node $(child) with color $(child.color) to a branch of color $colors"
+    if !hascolor(parent, color)
+        throw(ColorError("Cannot link $(parent) with color $(parent.color) to a branch of color $color"))
+    elseif !hascolor(child, color)
+        throw(ColorError("Cannot link $(child) with color $(child.color) to a branch of color $color"))
+    end
 
     # If the two nodes are already linked, we just need to color the branch
     if hasancestor(child, parent)
@@ -27,7 +29,9 @@ function link!(
 end
 
 function unlink!(parent::Node{K}, child::Node{K}, color) where K
-    @assert hasancestor(child, parent, color) "Cannot unlink $parent and $child for $color"
+    if !hasancestor(child, parent, color)
+        throw(ErrorException("Cannot unlink nodes for $color: expected $child to be the child of $parent."))
+    end
 
     _, branch = find_ancestor(child, parent)
     if isofcolor(branch, color) # remove the branch entirely

@@ -16,7 +16,12 @@ mutable struct Branch{K} <: Element{K}
     len::Union{Missing, Float64}
 
     function Branch{K}(parent::Node{K}, child::Node{K}, color::Color{K}, len) where K
-        @assert parent != child "Cannot create branch with identical parent $parent and child $child"
+        if parent == child
+            throw(ErrorException(
+                """
+                Cannot create branch with identical parent $parent and child $child"""
+            ))
+        end
         return new{K}(parent, child, color, len)
     end
 end
