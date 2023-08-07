@@ -25,3 +25,8 @@ function Base.show(io::IO, branch::Branch)
     println(io, "Branch $(branch.parent) --> $(branch.child)")
     return nothing
 end
+
+Base.show(io::IO, m::MIME"text/plain", color::Color) = show(io, m, color.color)
+Base.show(io::IO, color::Color) = show(io, color.color)
+
+Base.showerror(io::IO, e::ColorError) = print(io, "ColorError: ", e.msg)

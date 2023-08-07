@@ -2,6 +2,10 @@
 ############################## Type and constructors #########################
 ####################################################################
 
+struct ColorError <: Exception
+    msg::String
+end
+
 mutable struct Color{K}
     color::MVector{K, Bool}
 end

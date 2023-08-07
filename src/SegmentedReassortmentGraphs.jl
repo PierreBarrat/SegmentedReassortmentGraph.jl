@@ -19,7 +19,7 @@ include("core_methods.jl")
 
 include("construction.jl")
 
-import Base: show
+import Base: show, showerror
 include("show.jl")
 
 end
