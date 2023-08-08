@@ -309,7 +309,7 @@ Node with at least 2 and at most `K` ancestors, and exactly one child.
 For ease of implementation, a `HybridNode` can have no branch going down, *i.e.* can have no child. This should be an exceptional situation that only arises during initialization of the node. Such a node will throw an error when `check_node` is called.
 !!!
 """
-mutable struct HydridNode{K} <: Node{K}
+mutable struct HybridNode{K} <: Node{K}
     id::String
     label::String
     up_branches::Vector{Branch{K}}
@@ -362,7 +362,7 @@ ancestor(x::HybridNode{K}, color::Vararg{<:Integer}) where K = ancestor(x, Color
 
 function hasancestor(child::HybridNode{K}, parent::Node{K}) where K
 end
-function hasancestor(child::HybridNode{K}, parent::Node{K}, color)
+function hasancestor(child::HybridNode{K}, parent::Node{K}, color) where K
 end
 function hasancestor(child::HybridNode{K}, parent::Node{K}, color...) where K
     return hasancestor(child, parent, Color{K}(color...))
